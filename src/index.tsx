@@ -9,38 +9,85 @@ import logo from './logo.svg';
 interface CardProps {
     img?: string;
     value: number;
+    order: number;
+    qty: number;
+    isOpen: boolean;
     //onClick(): any;
 }
 
-const Card: React.FC<CardProps> = ({img, value}: CardProps) => {
-    return (
-        <button
-            className="card"
-            // onClick={onClick()}
-        >
-            <div className="card__inner">
-                <div className="card__back">
-                    <img src={logo} alt="back of a card"/>
-                </div>
-                <div className="card__face">
-                    {value}
-                </div>
-            </div>
-
-        </button>
-    )
+interface CardState {
+    img: string;
+    value: number;
+    order: number;
+    qty: number;
 }
 
-class Table extends React.Component {
-    renderCard() {
-        return (
-            <Card value={3}/>
-        );
+class Card extends React.Component<CardProps, CardState> {
+    constructor(props: CardProps | Readonly<CardProps>) {
+        super(props);
     }
+
+    style() {
+        const angle = (360 / this.props.qty) * this.props.order;
+        return {
+            transform: `translate(${getCoordinatesOnCircle(200, angle).x - 15}px, ${getCoordinatesOnCircle(200, angle).y - 25}px)`
+        };
+    };
     render() {
         return (
-            <div className="table">
-                {this.renderCard()}
+            <button
+                className={`card ${this.props.isOpen ? 'card--opened' : ''}`}
+                data-order={this.props.order}
+                style={this.style()}
+                // onClick={onClick()}
+            >
+                <div className="card__inner">
+                    <div className="card__back">
+                        <img src={logo} alt="back of a card"/>
+                    </div>
+                    <div className="card__face">
+                        {this.props.value}
+                    </div>
+                </div>
+
+            </button>
+        );
+    }
+}
+
+interface TableProps {}
+
+interface TableState {
+    showAllCards: boolean;
+}
+
+class Table extends React.Component<TableProps, TableState> {
+    constructor(props: TableProps | Readonly<TableProps>) {
+        super(props);
+
+        this.state = {
+            showAllCards: false,
+        };
+    }
+    handleClick = () => {
+        this.setState({showAllCards: !this.state.showAllCards})
+    }
+    cards() {
+        const array = [];
+        for (let i = 0; i < 15; i++) {
+            array.push(
+                <Card value={i} order={i} key={i} qty={15} isOpen={this.state.showAllCards}/>
+            );
+        }
+        return array;
+    };
+    render() {
+        return (
+            <div className="table-wrapper">
+                {this.cards()}
+                <div className="table">
+                    <button className="btn" onClick={() => this.handleClick()}>Show cards</button>
+                </div>
             </div>
         );
     }
@@ -61,3 +108,10 @@ ReactDOM.render(
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+
+function getCoordinatesOnCircle(radius:number, angle:number) {
+    return {
+        x: radius * Math.cos(angle * Math.PI / 180),
+        y: radius * Math.sin(angle * Math.PI / 180),
+    };
+}
